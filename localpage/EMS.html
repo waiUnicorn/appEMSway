@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<!-- Version 1.2-pwa / Last change ??? / wai -->
+<html>
+	<head>
+		<title>Куда отправить EMS</title>
+		<meta charset="utf-8" />
+		<meta name="author" content="wai(c)2023" />
+<style type="text/css">
+		:root {
+			--bodygradient--: linear-gradient( 4deg, rgba(173,252,234,1) 26.8%, rgba(192,229,246,1) 64% );
+		}
+		body {
+			font-family: Arial;
+			background: fixed #fff var(--bodygradient--) center center no-repeat;
+			text-align: center;			
+		}
+		header {
+			font-size: 30px;
+			margin-top: 40px;
+			margin-bottom: 10px;
+			color: #4682B4;
+		}
+		.content {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+    	}
+		p {
+			font-size: 18px;
+			margin-bottom: 5px;
+		}
+		input {
+			text-align: center;
+			border-radius: 8px;
+			width: 400px;
+			height: 30px;
+			font-family: Calibri;
+			font-size: 20px;
+			margin: auto;
+			text-shadow: 0px 2px 0px #b2a98f;
+			border: 1px solid #0B95DD;
+		}
+		input:focus {
+			outline: 1px solid #4169E1;
+		}
+		#result {
+			color: #DC143C;
+		}
+		.header {
+			text-align: start;
+			color: #4682B4;
+			border-image-slice: 1;
+			background-image: linear-gradient(to right,#FFFFF0, #E0FFFF);
+		}
+		footer {
+			height: 60px;
+ 			position: absolute;
+ 			bottom: 0;
+ 			width: 99%;
+		}
+		footer p {
+			text-align: start;
+			font-size: 12px;
+		}
+		#disclaimer {
+			color: #DC143C;
+		}
+</style>
+	</head>
+	<body>
+		<div class="header">EMS-НАПРАВЛЕНИЯ АДРЕСОВАНИЯ</div>
+		<header>
+			<div>Куда отправить EMS</div>
+		</header>
+		<div class="content">
+				<p>Утилита поможет указать направление адресования EMS-отправления в МСЦ г. Екатеринбург.</p>
+				<p>Введите индекс места назначения EMS-отправления:</p>
+				<input id='input_zipcode' placeholder="ИНДЕКС" autofocus />
+		</div>
+		<div>
+				<p id='output_result'></p></div>
+<script type="text/javascript">
+const appSet = {
+	inputElementId : 'input_zipcode',
+	outputElementId : 'output_result',
+	passResult: 'Направление адресования ',
+	badResult : 'Индекс не распознан',
+	emptyResult : '',
+	error: 'Произошла ошибка: '
+}
+
+const WaysData = {
+	"620880 ЕКАТЕРИНБУРГ УКД" : {
+		"620" : [0, 2, 4, 12, 17, 18, 27, 28, 33, 34, 35, 39, 41, 42, 48, 49, 50, 51, 57, 58, 62, 66, 67, 71, 72, 75, 77, 78, 88, 90, 91, 92, 98, 107, 109, 131, 133, 134, 135, 137, 138, 141, 143, 700, 907, 908, 920, 999],
+		"623" : [700, 701, 702, 704, 706],
+		"624" : [70, 71, 82, 90, 91, 92, 93, 96, 97]
+	},
+	"620872 ЕКАТЕРИНБУРГ УКД-2" : {
+		"620" : [7, 10, 14, 16, 19, 23, 24, 25, 26, 30, 31, 36, 43, 54, 56, 60, 61, 63, 70, 73, 76, 82, 85, 86, 87, 89, 100, 102, 103, 105, 108, 110, 130, 142, 144, 146, 147, 149, 902, 904],
+		"623" : [382, 383, 384, 385, 388, 389, 391],
+		"624" : [0, 2, 3, 5, 6, 13, 16, 19, 21, 22]
+	},
+	"620967 ЕКАТЕРИНБУРГ МСЦ EMS": null // other zip-codes
+}
+
+class Box
+{
+constructor ( name, query ) {
+	this.$ = (name.nodeType) ? name : this.get( name, query );
+}
+self ( func ) {
+	if ( func !== undefined ) {
+		func( this.$ );
+	}
+	return this.$;
+}
+style ( func ) {
+	const $ = this.$.style;
+	if ( func !== undefined ) {
+		func( $ );
+	}
+	return $;
+}
+text ( content, add ) {
+	const box = this.$;
+	const method = 'textContent';
+	const result = Box.contentOut(box, method, content, add);
+	if ( result !== undefined ) {
+		return result;
+	}
+}
+html ( content, add ) {
+	const box = this.$;
+	const method = 'innerHTML';
+	const result = Box.contentOut(box, method, content, add);
+	if ( result !== undefined ) {
+		return result;
+	}
+}
+value ( content, add ) {
+	const box = this.$;
+	const method = 'value';
+	const result = Box.contentOut(box, method, content, add);
+	if ( result !== undefined ) {
+		return result;
+	}
+}
+static contentOut ( box, method, content, add ) {
+	if ( content !== undefined ) {
+		content = (add) ? (box[method] + content) : content;
+		box[method] = content;
+	} else {
+		return box[method];
+	}
+}
+on ( func, event ) {
+	const box = this.$;
+	event = (event) ? event : 'click';
+	const length = (box.length) ? box.length : 1;
+	
+	if ( length ) {
+		for(let i = 0; i < length; i++){
+			box.addEventListener( event, func );
+		}
+	} else {
+		this.$error( { meth: 'on()', note: 'cause box is "null"' } );
+	}
+}
+get ( name, query ) {
+	if ( name[0] === '#' || name[0] === '.' || query ) {
+		return Box.query(name);
+	}
+	
+	const id = Box.id(name);
+	const cl = Box.class(name);
+	const tg = Box.tag(name);
+	
+	if ( id || cl || tg ) {
+		if ( id && cl || id && tg || cl && tg ) {
+			this.error( { name: null, meth: `'get( "${name}" )'`, note: `is ${(id)?'id':(cl)?'class':'tag'}`} );
+		}
+		return id || cl || tg;
+	}
+	
+	this.$error( { name: null, meth: `get( "${name}" )`, note: 'is "null"' } );
+	return null;
+}
+$error ( err ) {
+	const box = (err.name === null) ? 'Box' : err.name || this.$.id || this.$.classList.value || this.$;
+	
+	const note = `BoxError: ${box}.${err.meth}\n${err.note}`;
+	console.log(note);
+}
+static id ( name ) {
+	return document.getElementById(name);
+}
+static "class" ( name ) {
+	const $clas = document.getElementsByClassName(name);
+	return ($clas.length !== 0) ? $clas : null;
+}
+static tag ( name ) {
+	const $tag = document.getElementsByTagName(name);
+	return ($tag.length !== 0) ? $tag : null;
+}
+static query ( selector ) {
+	if ( selector[0] === '#' ) {
+		return document.querySelector(selector);
+	} return document.querySelectorAll(selector);
+}
+
+ }
+
+class FindWay
+{
+constructor ( ) {
+	this.ways = WaysData;
+}
+each ( object, func ) {
+	for (let index in object) {
+		func(object[index], index);
+	}
+}
+async find ( value, func ) {
+	const $start = Number(value.slice(0,3));
+	const $end = Number(value.slice(3));
+	let result = [];
+	let error = false;
+	
+	this.each(this.ways, (object, way) => {
+		if (object !== null) {
+			this.each(object, (array, start) => {
+				if ($start===Number(start) && array.includes($end)) {
+					result.push(way);
+				}
+			})
+		} else {
+			if ( result.length === 0 ) {
+				result.push(way);
+			}
+		}
+	})
+	
+	if (result.length === 1) {
+		result = result[0]
+	} else {
+		error = new Error(`FindwayError - result: ${JSON.strigify(result)}`)
+	}
+	
+	if (func) {
+		func(result, error)
+	} return {result: result, error: error};
+}
+
+ }
+
+class Main
+{
+constructor ( ) {
+	const {inputElementId, outputElementId} = appSet;
+	
+	this.input = new Box(inputElementId);
+	this.out = new Box(outputElementId);
+	this.findWay = new FindWay();
+	
+	this.input.on( this.start.bind(this), 'input' );
+}
+async start ( value ) {
+	let result = '';
+	
+	if ( typeof value !== 'string' ) {
+		value = value.target.value;
+	}
+	
+	if ( Main.valid(value) ) {
+		const {passResult, error} = appSet;
+		const {result: answerResult, error: answerError} = await this.findWay.find(value);
+		
+		result = answerError ? error+answerError : passResult+answerResult;
+	} else {
+		const {badResult, emptyResult} = appSet;
+		result = value.length === 0 ? emptyResult : badResult;
+	}
+	
+	this.out.text( result );
+}
+static valid ( value ) {
+	return !isNaN( Number(value) ) && value.length === 6;
+}
+
+ }
+
+window.onload = () => new Main ();
+
+</script>
+		<footer>
+	<p>Индексы для "620880 ЕКАТЕРИНБУРГ УКД" и "620872 ЕКАТЕРИНБУРГ УКД-2", используемые утилитой согласно "Порядку адресования и направления в Екатеринбургский МСЦ почтовых отправлений, почтовых емкостей, формирования сопроводительных документов для ОПС Екатеринбургского почтамта на 2021 год" <br /><span id="disclaimer">Не является интеллектуальной собственностью АО Почта России. Вы используете данную утилиту на свой страх и риск.</span></p>
+		</footer>
+	</body>
+</html>
